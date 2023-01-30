@@ -4,8 +4,8 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-WORKDIR src/
-COPY ["OnlineShop/OnlineShop.csproj", "./OnlineShop/"]
+WORKDIR /src
+COPY ["OnlineShop/OnlineShop.csproj", "OnlineShop/"]
 RUN dotnet restore "OnlineShop/OnlineShop.csproj"
 COPY . .
 WORKDIR "/src/OnlineShop"

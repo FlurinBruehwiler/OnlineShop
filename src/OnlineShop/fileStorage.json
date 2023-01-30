@@ -1,3 +1,3 @@
 {
-  "ActiveDb": "Sqlite"
+  "ActiveDb": "MariaDb"
 }

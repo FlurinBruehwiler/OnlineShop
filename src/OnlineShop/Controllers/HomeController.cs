@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShop.Data;
@@ -40,14 +39,10 @@ public class HomeController : Controller
             ViewData["order"] = order;
             
         }
-
         
         ViewData["products"] = products;
         ViewData["user"] = user;
         ViewData["order"] = null;
-        
-
-
         
         return View();
     }

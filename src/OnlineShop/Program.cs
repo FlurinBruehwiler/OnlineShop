@@ -21,7 +21,6 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<OrderService>();
-builder.Services.AddScoped<PaymentService>();
 
 builder.Services.AddScoped<IDbContext>(provider =>
 {
@@ -40,6 +39,7 @@ builder.Services.AddDbContext<MySqlContext>((provider, options) =>
     var db = dbService.Value.Databases.FirstOrDefault(x => x.Name == "MariaDb");
     if (db is null)
         throw new Exception("No mariadb configured");
+
     options.UseMySql(db.ConnectionString, new MariaDbServerVersion("10.10.2"));
 });
 
@@ -49,6 +49,7 @@ builder.Services.AddDbContext<SqliteContext>((provider, options) =>
     var db = dbService.Value.Databases.FirstOrDefault(x => x.Name == "Sqlite");
     if (db is null)
         throw new Exception("No sqlite configured");
+
     options.UseSqlite(db.ConnectionString);
 });
 
@@ -62,11 +63,18 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-PaymentService.ConfigureStripe(app.Services.GetRequiredService<IOptions<StripePaymentConfiguration>>().Value);
+using (var scope = app.Services.CreateScope())
+{
+    var mySqlContext = scope.ServiceProvider.GetRequiredService<MySqlContext>();
+    mySqlContext.Database.Migrate();
+    
+    var sqliteContext = scope.ServiceProvider.GetRequiredService<SqliteContext>();
+    sqliteContext.Database.Migrate();
+}
 
 app.UseExceptionHandler(appError =>
 {
-   appError.Run(async (context ) =>
+   appError.Run(async context =>
    {
        var exceptionHandlerPathFeature =
            context.Features.Get<IExceptionHandlerPathFeature>();
@@ -74,19 +82,9 @@ app.UseExceptionHandler(appError =>
        if (exceptionHandlerPathFeature?.Error is not BadRequestException exception)
            return;
 
-       context.Response.StatusCode = StatusCodes.Status400BadRequest;
-
        await context.Response.WriteAsJsonAsync(exception.Message);
    }); 
 });
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
 
 app.UseHttpsRedirection();
 
