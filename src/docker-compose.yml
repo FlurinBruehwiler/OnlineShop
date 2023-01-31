@@ -4,12 +4,11 @@ services:
 
   web:
     container_name: web
-    build: 
-      context: .
-      dockerfile: ./Dockerfile
-    depends_on: [ db ]
-    ports:
-      - "5000:80"
+    build: .
+    image: m151onlineshop.azurecr.io/web
+    depends_on:
+      db:
+        condition: service_healthy
   db:
     image: mariadb:10.9.4
     container_name: mariadb
@@ -21,6 +20,12 @@ services:
       MYSQL_DATABASE: online_shop
     volumes:
       - db:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "--silent" ]
 
 volumes:
   db:
+    driver: azure_file
+    driver_opts:
+      share_name: mym151fileshare
+      storage_account_name: mym151storageaccount

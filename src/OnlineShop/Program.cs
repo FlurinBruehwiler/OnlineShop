@@ -40,7 +40,7 @@ builder.Services.AddDbContext<MySqlContext>((provider, options) =>
     if (db is null)
         throw new Exception("No mariadb configured");
 
-    options.UseMySql(db.ConnectionString, new MariaDbServerVersion("10.10.2"));
+    options.UseSqlite(db.ConnectionString);
 });
 
 builder.Services.AddDbContext<SqliteContext>((provider, options) =>
@@ -65,8 +65,8 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var mySqlContext = scope.ServiceProvider.GetRequiredService<MySqlContext>();
-    mySqlContext.Database.Migrate();
+    var mariadbContext = scope.ServiceProvider.GetRequiredService<MySqlContext>();
+    mariadbContext.Database.Migrate();
     
     var sqliteContext = scope.ServiceProvider.GetRequiredService<SqliteContext>();
     sqliteContext.Database.Migrate();
